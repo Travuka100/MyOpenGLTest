@@ -7,14 +7,7 @@
 // Функция чтобы корректировать окно просмотра OpenGL вместе с изменением окна GLFW
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
-    if (width == 400 || height == 400)
-    {
-        glViewport(0, 0, 500, 500);
-    }
-    else
-    {
         glViewport(0, 0, width, height);
-    }
 }
 
 void processInput(GLFWwindow *window)
@@ -26,7 +19,7 @@ void processInput(GLFWwindow *window)
 int main()
 {
 
-    // GLFW PROPERTIES
+    // Настройка - инициализаця GLFW
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -42,16 +35,20 @@ int main()
     glfwMakeContextCurrent(window);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-    // GLAD/OPENGL CODE
+    
+    // Загружаем функции OpenGL через GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
 
-    // VERTEX SHADER
-
+    /******************
+     ВЕРШИННЫЙ ШЕЙДЕР
+    *******************/
+    // Принимает на вход массив вершин и преобразует их в другой вид.
+    // В данном случае вершинный шейдер передаёт массив дальше без изменений через переменную gl_Position
+    
     const char *vertexShaderSource = "#version 330 core\n"
                                      "layout (location = 0) in vec3 aPos;\n"
                                      "void main()\n"
@@ -75,12 +72,17 @@ int main()
                   << infoLog << std::endl;
     }
 
-    // FRAGMENT SHADER
+    /******************
+     Фрагментный шейдер
+    *******************/
+
+    // Вычисляет цвета фрагментов в фигуре на экране
+    // В данном случае он устанавливает общий цвет в оранжевый
     const char *fragmentShaderSource = "#version 330 core\n"
                                        "out vec4 FragColor;\n"
                                        "void main()\n"
                                        "{\n"
-                                       "FragColor = vec4(0.6f, 0.5f, 0.2f, 1.0f);\n"
+                                       "FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
                                        "}\0";
 
     unsigned int fragmentShader;
@@ -94,7 +96,7 @@ int main()
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
     }
 
-    // SHADER MIX
+    // Линковка всех скомпилированных шейдеров в shaderProgram для использования 
     unsigned int shaderProgram;
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
@@ -111,11 +113,9 @@ int main()
 
     glUseProgram(shaderProgram);
 
-    // DELETE SHADERS
+    // Удаляем шейдеры ведь мы уже слинковали их в shaderProgram
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-
-    // Vertex ARRAY
 
     float vertices[] = {
         -0.5f, -0.5f, 0.0f,
@@ -126,17 +126,16 @@ int main()
     glGenVertexArrays(1, &VAO);  
     glGenBuffers(1, &VBO);  
     glBindVertexArray(VAO);
-    // 2. copy our vertices array in a buffer for OpenGL to use
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    // 3. then set our vertex attributes pointers
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
-        glViewport(0, 0, 800, 600);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -147,7 +146,7 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
+    // Очищаем видеопамять видеокарты при выходе
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
